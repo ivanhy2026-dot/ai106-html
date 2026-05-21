@@ -3,35 +3,429 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="AI106 HTML project boilerplate" />
-    <title>AI106 HTML</title>
-    <link rel="stylesheet" href="css/style.css" />
+    <meta
+      name="description"
+      content="Name Card Analyzer - upload a business card image and extract contact information from n8n webhook output."
+    />
+    <title>Name Card Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Playfair Display", serif;
+        --bg: #f2f6fb;
+        --surface: #ffffff;
+        --text: #444a54;
+        --muted: #6f7d8b;
+        --primary: #238fb2;
+        --primary-soft: #85bccf;
+        --border: rgba(68, 74, 84, 0.12);
+        --radius: 1.5rem;
+        --shadow: 0 24px 60px rgba(36, 71, 109, 0.11);
+        --shadow-light: 0 10px 24px rgba(36, 71, 109, 0.08);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(circle at top, rgba(131, 195, 224, 0.35), transparent 34%),
+          linear-gradient(180deg, #ffffff 0%, #eef4f9 100%);
+        color: var(--text);
+      }
+
+      img {
+        max-width: 100%;
+        display: block;
+      }
+
+      .page-shell {
+        width: min(1120px, calc(100% - 2rem));
+        margin: 0 auto;
+        padding: 2rem 0 3rem;
+      }
+
+      .hero {
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(68, 74, 84, 0.08);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 2.5rem 2rem;
+        margin-bottom: 1.75rem;
+      }
+
+      .eyebrow {
+        margin: 0 0 0.75rem;
+        color: var(--primary);
+        font-size: 0.95rem;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.05;
+      }
+
+      h1 {
+        font-size: clamp(2.4rem, 3vw, 3.5rem);
+      }
+
+      .hero-text,
+      .copy-text,
+      .status {
+        font-size: 1rem;
+        color: var(--muted);
+      }
+
+      .panel {
+        display: grid;
+        gap: 1.5rem;
+      }
+
+      .upload-form,
+      .result-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-light);
+        padding: 1.75rem;
+      }
+
+      .upload-form {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .upload-form p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .file-picker {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 1rem 1.15rem;
+        border: 1px dashed rgba(35, 143, 178, 0.55);
+        border-radius: calc(var(--radius) - 0.4rem);
+        background: rgba(35, 143, 178, 0.06);
+        color: var(--text);
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease;
+      }
+
+      .file-picker:hover {
+        background: rgba(35, 143, 178, 0.12);
+        border-color: rgba(35, 143, 178, 0.85);
+      }
+
+      .file-picker input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .form-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .button {
+        min-width: 160px;
+        padding: 0.95rem 1.4rem;
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #238fb2 0%, #85bccf 100%);
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        box-shadow: 0 18px 28px rgba(35, 143, 178, 0.22);
+        transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+      }
+
+      .button:hover,
+      .button:focus-visible {
+        transform: translateY(-1px);
+        box-shadow: 0 20px 36px rgba(35, 143, 178, 0.28);
+      }
+
+      .button:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+
+      .file-name {
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      .status {
+        min-height: 1.5rem;
+      }
+
+      .status.success {
+        color: #1c5a6e;
+      }
+
+      .status.error {
+        color: #c44b4b;
+      }
+
+      .result-card.hidden {
+        display: none;
+      }
+
+      .result-header {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .result-subtitle {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .result-grid {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .result-field {
+        padding: 1rem;
+        border-radius: 1rem;
+        background: rgba(35, 143, 178, 0.06);
+        border: 1px solid rgba(35, 143, 178, 0.18);
+      }
+
+      .field-key {
+        margin: 0 0 0.35rem;
+        font-size: 0.95rem;
+        color: var(--primary);
+      }
+
+      .field-value {
+        margin: 0;
+        color: var(--text);
+        font-size: 1rem;
+      }
+
+      .raw-output {
+        margin: 1.5rem 0 0;
+        padding: 1rem;
+        overflow-x: auto;
+        border-radius: 1rem;
+        background: #eef8ff;
+        border: 1px solid rgba(35, 143, 178, 0.18);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.92rem;
+        color: var(--text);
+      }
+
+      .site-footer {
+        text-align: center;
+        padding: 2rem 0 1rem;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      @media (min-width: 640px) {
+        .result-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+    </style>
   </head>
   <body>
-    <header class="site-header">
-      <h1>AI106 HTML</h1>
-      <p class="tagline">Starter boilerplate — edit and build from here.</p>
-    </header>
-
-    <main id="main">
-      <section class="card" aria-labelledby="welcome-heading">
-        <h2 id="welcome-heading">Welcome</h2>
-        <p>
-          This project includes separate HTML, CSS, and JavaScript files. Open
-          <code>index.html</code> in a browser or use a local dev server to
-          get started.
+    <main class="page-shell">
+      <header class="hero" aria-labelledby="hero-title">
+        <p class="eyebrow">Name Card Analysis</p>
+        <h1 id="hero-title">Upload a card, get structured contact data</h1>
+        <p class="hero-text">
+          Use the webhook-powered analyzer to extract a name, title, phone, email,
+          address, and more from a business card image.
         </p>
-        <button type="button" id="demo-button" class="button">
-          Try the demo
-        </button>
-        <p id="demo-output" class="demo-output" aria-live="polite"></p>
+      </header>
+
+      <section class="panel" aria-labelledby="upload-heading">
+        <div class="upload-form" aria-labelledby="upload-heading">
+          <div>
+            <h2 id="upload-heading">Upload your name card</h2>
+            <p id="instructions">
+              The webhook accepts JPEG, PNG, HEIC, and HEIF image files. Choose a
+              file and submit to receive parsed contact details.
+            </p>
+          </div>
+
+          <label class="file-picker" for="file-input">
+            <span>Choose a file</span>
+            <input
+              type="file"
+              id="file-input"
+              accept="image/jpeg,image/png,image/heic,image/heif"
+              required
+            />
+          </label>
+
+          <div class="form-row">
+            <button type="button" id="submit-button" class="button">
+              Analyze card
+            </button>
+            <span id="file-name" class="file-name">No file selected</span>
+          </div>
+
+          <p id="status" class="status" aria-live="polite"></p>
+        </div>
+
+        <article class="result-card hidden" id="result-card">
+          <div class="result-header">
+            <h2>Extracted output</h2>
+            <p class="result-subtitle">Structured fields returned by the webhook.</p>
+          </div>
+          <div id="result-grid" class="result-grid"></div>
+          <pre id="raw-output" class="raw-output"></pre>
+        </article>
       </section>
     </main>
 
     <footer class="site-footer">
-      <p>&copy; <span id="year"></span> AI106 HTML</p>
+      <p>Powered by an n8n webhook for name card extraction.</p>
     </footer>
 
-    <script src="js/main.js" defer></script>
+    <script>
+      const WEBHOOK_URL =
+        "https://prefacecontent.app.n8n.cloud/webhook/37a8a358-c787-49e1-bcf6-05107ef9490d";
+      const fileInput = document.getElementById("file-input");
+      const submitButton = document.getElementById("submit-button");
+      const statusEl = document.getElementById("status");
+      const resultCard = document.getElementById("result-card");
+      const resultGrid = document.getElementById("result-grid");
+      const rawOutput = document.getElementById("raw-output");
+      const fileNameEl = document.getElementById("file-name");
+
+      function formatKey(key) {
+        return key
+          .replace(/([A-Z])/g, " $1")
+          .replace(/^./, (char) => char.toUpperCase());
+      }
+
+      function renderResult(output) {
+        resultGrid.innerHTML = "";
+        if (!output || typeof output !== "object") {
+          resultGrid.innerHTML =
+            "<p class='copy-text'>No structured output was returned.</p>";
+          return;
+        }
+
+        const keys = [
+          "fullName",
+          "title",
+          "companyName",
+          "phone",
+          "email",
+          "address",
+          "otherInfo",
+          ...Object.keys(output).filter((key) => !["fullName", "title", "companyName", "phone", "email", "address", "otherInfo"].includes(key)),
+        ];
+
+        keys.forEach((key) => {
+          if (!(key in output)) {
+            return;
+          }
+
+          const value = String(output[key] ?? "").trim();
+          const field = document.createElement("div");
+          field.className = "result-field";
+          field.innerHTML = `
+            <p class="field-key">${formatKey(key)}</p>
+            <p class="field-value">${value || "—"}</p>
+          `;
+          resultGrid.appendChild(field);
+        });
+      }
+
+      function setStatus(message, variant = "") {
+        statusEl.textContent = message;
+        statusEl.className = variant ? `status ${variant}` : "status";
+      }
+
+      fileInput.addEventListener("change", () => {
+        const file = fileInput.files && fileInput.files[0];
+        fileNameEl.textContent = file ? file.name : "No file selected";
+        setStatus("Ready to upload.");
+      });
+
+      submitButton.addEventListener("click", async () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) {
+          setStatus("Please select an image file before submitting.", "error");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        submitButton.disabled = true;
+        setStatus("Uploading and analyzing the image…", "");
+        resultCard.classList.add("hidden");
+        rawOutput.textContent = "";
+
+        try {
+          const response = await fetch(WEBHOOK_URL, {
+            method: "POST",
+            body: formData,
+          });
+
+          const resultText = await response.text();
+          if (!response.ok) {
+            throw new Error(
+              `Webhook returned ${response.status}: ${resultText || response.statusText}`
+            );
+          }
+
+          let json;
+          try {
+            json = JSON.parse(resultText);
+          } catch (error) {
+            throw new Error("Received invalid JSON from webhook.");
+          }
+
+          const output = json.output || json;
+          renderResult(output);
+          rawOutput.textContent = JSON.stringify(json, null, 2);
+          resultCard.classList.remove("hidden");
+          setStatus("Analysis complete. Review the extracted information below.", "success");
+        } catch (error) {
+          setStatus(error.message || "Unable to reach the webhook. Please try again.", "error");
+        } finally {
+          submitButton.disabled = false;
+        }
+      });
+    </script>
   </body>
 </html>
